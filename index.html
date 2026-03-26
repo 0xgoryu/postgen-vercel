@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>postgen_id</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#070707;--bg2:#0c0c0c;--bg3:#101010;
+    --border:#1a1a1a;--border2:#141414;
+    --text:#e2dfd4;--muted:#888;--dim:#444;--dimmer:#2a2a2a;
+    --accent:#c8ff47;--red:#f87171;--green:#4ade80;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+  button{cursor:pointer;transition:opacity .12s,transform .1s;font-family:'Syne',sans-serif}
+  button:hover:not(:disabled){opacity:.82}
+  button:active:not(:disabled){transform:scale(.97)}
+  ::-webkit-scrollbar{width:3px}
+  ::-webkit-scrollbar-thumb{background:#222}
+  pre{font-family:'Space Mono',monospace}
+  .mono{font-family:'Space Mono',monospace}
+
+  /* ─ Header ─ */
+  #header{position:sticky;top:0;z-index:10;background:rgba(7,7,7,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--border2)}
+  #header-inner{max-width:720px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .logo{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);letter-spacing:-.5px}
+  .logo-sub{font-family:'Space Mono',monospace;font-size:9px;color:#333;margin-top:2px}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pill{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;border-radius:100px;border:1px solid var(--border);white-space:nowrap}
+  .pill-gray{color:#555;background:#111}
+  .pill-green{color:var(--green);background:#0d1f0d;border-color:#1a3a1a}
+  .pill-red{color:var(--red);background:#1f0d0d;border-color:#3a1a1a}
+  .icon-btn{font-size:14px;color:#555;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-family:'Space Mono',monospace}
+
+  /* ─ Main ─ */
+  #main{max-width:720px;margin:0 auto;padding:18px 20px 80px}
+
+  /* ─ API Key banner ─ */
+  #key-banner{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #key-banner.hidden{display:none}
+  .key-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--dim);white-space:nowrap}
+  #key-input{flex:1;min-width:200px;background:#111;border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none}
+  #key-input:focus{border-color:var(--accent)}
+  #key-save{background:var(--accent);color:#070707;border:none;border-radius:6px;padding:7px 14px;font-weight:700;font-size:12px}
+  #key-clear{background:none;border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:#555;font-size:11px;font-family:'Space Mono',monospace}
+
+  /* ─ Source switcher ─ */
+  .section-label{font-family:'Space Mono',monospace;font-size:9px;color:#333;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  #source-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .src-btn{flex:1;min-width:170px;display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);text-align:left}
+  .src-btn.active{border-color:var(--accent);background:rgba(200,255,71,.04)}
+  .src-icon{font-size:17px;flex-shrink:0}
+  .src-info{flex:1}
+  .src-name{display:block;font-size:13px;font-weight:700;color:#ccc}
+  .src-sub{display:block;font-family:'Space Mono',monospace;font-size:9px;color:#333;margin-top:2px}
+  .src-check{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent)}
+
+  /* ─ Trends box ─ */
+  #trends-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+  #trends-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:none;border:none;color:var(--text)}
+  #trends-toggle span:first-child{font-family:'Space Mono',monospace;font-size:10px;color:#3a3a3a;text-align:left;flex:1}
+  #trends-toggle span:last-child{font-family:'Space Mono',monospace;font-size:10px;color:#2a2a2a}
+  #trends-list{display:none}
+  #trends-list.open{display:block}
+  .t-item{display:flex;align-items:flex-start;gap:10px;padding:8px 14px;border-top:1px solid #111}
+  .t-item:nth-child(odd){background:#090909}
+  .t-item:nth-child(even){background:#0b0b0b}
+  .t-num{font-family:'Space Mono',monospace;font-size:10px;color:#2a2a2a;width:18px;flex-shrink:0;padding-top:2px}
+  .t-body{flex:1}
+  .t-title{font-size:13px;color:#888;display:block}
+  .t-sub{font-family:'Space Mono',monospace;font-size:9px;color:#333;line-height:1.5;display:block;margin-top:2px}
+  .t-traffic{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);opacity:.5;flex-shrink:0;padding-top:2px}
+  #trends-err{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}
+
+  /* ─ Panel ─ */
+  #panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:20px}
+  .panel-row{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+  .panel-col{flex:1;min-width:170px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:100px;border:1px solid var(--border);background:transparent;color:#555}
+  .chip.active-y{background:var(--accent);color:#070707;border-color:var(--accent)}
+  .chip.active-w{background:#e2dfd4;color:#070707;border-color:#e2dfd4}
+  #gen-btn{width:100%;padding:13px;background:var(--accent);color:#070707;border:none;border-radius:10px;font-size:14px;font-weight:800;letter-spacing:-.2px}
+  #gen-btn:disabled{opacity:.55}
+  #gen-err{margin-top:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--red);text-align:center;display:none}
+
+  /* ─ Empty ─ */
+  #empty{text-align:center;padding:48px 0;opacity:.28}
+  #empty .e-icon{font-size:24px;color:var(--accent);margin-bottom:10px}
+  #empty .e-txt{font-family:'Space Mono',monospace;font-size:11px;color:#555;line-height:1.9}
+
+  /* ─ Feed ─ */
+  #feed{display:flex;flex-direction:column;gap:14px}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .card-top{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border2);background:#080808}
+  .card-tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .tag-y{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);background:rgba(200,255,71,.07);padding:2px 7px;border-radius:100px}
+  .tag-g{font-family:'Space Mono',monospace;font-size:9px;color:#555;background:#111;padding:2px 7px;border-radius:100px}
+  .tag-d{font-family:'Space Mono',monospace;font-size:9px;color:#333;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card-ts{font-family:'Space Mono',monospace;font-size:9px;color:#222}
+  .card-text{font-family:'Space Mono',monospace;font-size:13px;color:#d5d2c8;line-height:1.9;white-space:pre-wrap;word-break:break-word;padding:16px 16px 12px}
+  .card-bot{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-top:1px solid var(--border2);background:#080808}
+  .card-chars{font-family:'Space Mono',monospace;font-size:9px;color:#222}
+  .card-btns{display:flex;gap:6px}
+  .card-btn{font-family:'Space Mono',monospace;font-size:10px;color:#666;background:#111;border:1px solid #1a1a1a;border-radius:6px;padding:4px 10px}
+  .card-btn.del{color:#2e2e2e}
+  .card-btn.copied{color:var(--green)}
+
+  /* spinner */
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{display:inline-block;animation:spin .8s linear infinite;margin-right:7px}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-inner">
+    <div>
+      <div class="logo">postgen_id</div>
+      <div class="logo-sub mono">realtime trends → openrouter → post</div>
+    </div>
+    <div class="header-right">
+      <span id="trend-pill" class="pill pill-gray">—</span>
+      <button class="icon-btn" id="refresh-btn" title="Refresh trends">↻</button>
+      <button class="icon-btn" id="key-toggle-btn" title="API Key">⚙</button>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- API Key -->
+  <div id="key-banner">
+    <span class="key-label">OpenRouter API Key</span>
+    <input id="key-input" type="password" placeholder="sk-or-v1-..." spellcheck="false"/>
+    <button id="key-save">Simpan</button>
+    <button id="key-clear">Hapus</button>
+  </div>
+
+  <!-- Source -->
+  <div class="section-label">sumber trend</div>
+  <div id="source-btns">
+    <button class="src-btn active" data-src="reddit">
+      <span class="src-icon">🟠</span>
+      <div class="src-info">
+        <span class="src-name">Reddit Indonesia</span>
+        <span class="src-sub">r/indonesia · r/investasiid · no proxy</span>
+      </div>
+      <span class="src-check" id="reddit-check">✓</span>
+    </button>
+    <button class="src-btn" data-src="perplexity">
+      <span class="src-icon">🔍</span>
+      <div class="src-info">
+        <span class="src-name">Perplexity Sonar</span>
+        <span class="src-sub">real-time web search via OpenRouter</span>
+      </div>
+      <span class="src-check" id="perplexity-check" style="display:none">✓</span>
+    </button>
+  </div>
+
+  <!-- Trends Preview -->
+  <div id="trends-box">
+    <button id="trends-toggle">
+      <span id="trends-lbl">⟳ loading trends...</span>
+      <span id="trends-arrow">▼</span>
+    </button>
+    <div id="trends-list"></div>
+    <div id="trends-err" style="display:none">
+      <span id="trends-err-msg" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--red)"></span>
+      <button class="icon-btn" onclick="loadTrends()">↻ retry</button>
+    </div>
+  </div>
+
+  <!-- Panel -->
+  <div id="panel">
+    <div class="panel-row">
+      <div class="panel-col">
+        <div class="section-label">topik filter</div>
+        <div class="chips" id="topic-chips">
+          <button class="chip active-y" data-topic="all">🎲 Semua</button>
+          <button class="chip" data-topic="crypto">₿ Crypto</button>
+          <button class="chip" data-topic="ai">🤖 AI/Tech</button>
+          <button class="chip" data-topic="ekonomi">📈 Ekonomi</button>
+          <button class="chip" data-topic="viral">🔥 Viral</button>
+        </div>
+      </div>
+      <div class="panel-col">
+        <div class="section-label">panjang</div>
+        <div class="chips" id="length-chips">
+          <button class="chip" data-len="short">Pendek</button>
+          <button class="chip" data-len="medium">Sedang</button>
+          <button class="chip" data-len="long">Panjang</button>
+          <button class="chip active-w" data-len="auto">✨ Auto</button>
+        </div>
+      </div>
+    </div>
+    <button id="gen-btn">⚡ Generate Postingan</button>
+    <div id="gen-err" class="mono"></div>
+  </div>
+
+  <!-- Empty -->
+  <div id="empty">
+    <div class="e-icon">✦</div>
+    <div class="e-txt" id="empty-txt">loading trends...</div>
+  </div>
+
+  <!-- Feed -->
+  <div id="feed"></div>
+
+</div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────────
+const OR_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+const FREE_MODELS = [
+  "google/gemma-3-27b-it:free",
+  "meta-llama/llama-4-maverick:free",
+  "qwen/qwen3-8b:free",
+  "deepseek/deepseek-r1:free",
+  "deepseek/deepseek-v3-base:free",
+  "nvidia/llama-3.1-nemotron-nano-8b-v1:free",
+  "mistralai/mistral-small-3.1-24b-instruct:free",
+];
+
+let state = {
+  key: localStorage.getItem("or_key") || "",
+  source: "reddit",
+  trends: [],
+  tStatus: "idle",
+  activeTopic: "all",
+  activeLength: "auto",
+  showTrends: false,
+  generating: false,
+};
+
+const TOPIC_KW = {
+  crypto:  ["bitcoin","btc","eth","crypto","kripto","token","defi","nft","web3","binance"],
+  ai:      ["ai","chatgpt","llm","tech","teknologi","claude","gemini","startup","artificial"],
+  ekonomi: ["rupiah","dollar","usd","idr","saham","ihsg","investasi","kurs","inflasi","bi rate","bank"],
+  viral:   ["viral","trending","ramai","heboh","rame"],
+};
+
+const LENGTH_PROMPT = {
+  short:  "Buat sangat pendek, 2-4 baris. Simple dan punch.",
+  medium: "Buat 5-8 baris dengan sedikit detail dan struktur.",
+  long:   "Buat 10+ baris. Observasi mendalam, detail spesifik, storytelling.",
+  auto:   "Pilih sendiri panjang yang paling natural untuk topik ini.",
+};
+
+const STYLE_GUIDE = `Kamu adalah ghost-writer untuk akun Twitter/X Indonesia @setyamickala.
+
+Gaya:
+- Kasual, santai, kayak ngobrol sama temen
+- Bahasa indo-inggris campur (lebih banyak indo)
+- Observasi tajam, anti-hype, kadang satiris
+- Paragraf SANGAT pendek, banyak line break
+- Kadang mulai "Unpopular opinion:" atau akhiri "menurut lu?"
+- NO hashtag, emoji minimal (😹🤣🥴💀)
+- Data/angka spesifik kalau ada
+
+Contoh:
+---
+enak banget holding usd
+kalau ga dipakai bisa buat farming yield, kalaupun udah cukup bisa dijual lagi ke idr dengan rate Rp. 17,100 😹
+wkwkwk
+---
+Timeline lagi rame:
+resign kerja > full AI agent > cuan gede
+
+tapi jujur aja: berapa % yang beneran berhasil?
+yang dipost: profit. data failure rate diumpetin.
+
+ini peluang legit… atau cuma marketing lama dibungkus AI?
+menurut lu?
+---
+WAJIB: Tulis HANYA isi postingan. Tanpa preamble. Tanpa tanda kutip.`;
+
+// ─── API Key UI ─────────────────────────────────────────────────────────────
+const keyBanner = document.getElementById("key-banner");
+const keyInput  = document.getElementById("key-input");
+
+function updateKeyBanner() {
+  if (state.key) {
+    keyBanner.classList.add("hidden");
+    keyInput.value = state.key;
+  } else {
+    keyBanner.classList.remove("hidden");
+  }
+}
+
+document.getElementById("key-toggle-btn").addEventListener("click", () => {
+  keyBanner.classList.toggle("hidden");
+});
+
+document.getElementById("key-save").addEventListener("click", () => {
+  const v = keyInput.value.trim();
+  if (!v) return;
+  state.key = v;
+  localStorage.setItem("or_key", v);
+  keyBanner.classList.add("hidden");
+  setEmptyTxt();
+});
+
+document.getElementById("key-clear").addEventListener("click", () => {
+  state.key = "";
+  localStorage.removeItem("or_key");
+  keyInput.value = "";
+  keyBanner.classList.remove("hidden");
+});
+
+// ─── Source switcher ────────────────────────────────────────────────────────
+document.querySelectorAll(".src-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const src = btn.dataset.src;
+    state.source = src;
+    document.querySelectorAll(".src-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("reddit-check").style.display     = src === "reddit"     ? "" : "none";
+    document.getElementById("perplexity-check").style.display = src === "perplexity" ? "" : "none";
+    loadTrends();
+  });
+});
+
+// ─── Trends ─────────────────────────────────────────────────────────────────
+async function fetchReddit() {
+  const sources = [
+    { url: "https://www.reddit.com/r/indonesia/hot.json?limit=20",       label: "r/indonesia" },
+    { url: "https://www.reddit.com/r/investasiid/hot.json?limit=10",     label: "r/investasiid" },
+    { url: "https://www.reddit.com/r/indonesia/search.json?q=crypto+bitcoin+AI+saham&sort=hot&limit=10", label: "r/indonesia search" },
+  ];
+  const results = [];
+  for (const src of sources) {
+    try {
+      const res = await fetch(src.url, { headers: { "User-Agent": "postgen-id/1.0" }, signal: AbortSignal.timeout(7000) });
+      if (!res.ok) continue;
+      const j = await res.json();
+      (j?.data?.children || []).forEach(p => {
+        const d = p.data;
+        if (d.title && !results.find(r => r.title === d.title)) {
+          results.push({ title: d.title, traffic: `${d.score} upvotes`, news: d.selftext ? [d.selftext.slice(0,120)] : [], source: src.label });
+        }
+      });
+    } catch(_) {}
+  }
+  if (!results.length) throw new Error("Reddit tidak bisa diakses dari browser ini");
+  return results.slice(0, 25);
+}
+
+async function fetchPerplexity() {
+  if (!state.key) throw new Error("API key belum diset — klik ⚙ di atas");
+  const res = await fetch(OR_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${state.key}`, "HTTP-Referer": location.href },
+    body: JSON.stringify({
+      model: "perplexity/sonar",
+      max_tokens: 700,
+      messages: [{ role: "user", content: `Cari 12 topik yang sedang trending/viral di Indonesia hari ini (ekonomi, crypto, AI, berita viral, teknologi, lifestyle).
+Balas HANYA JSON array: [{"title":"...","summary":"... (1 kalimat singkat)"}]
+Jangan ada teks lain selain JSON array.` }],
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const raw = (data.choices?.[0]?.message?.content || "").trim().replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(raw);
+  return parsed.map(t => ({ title: t.title || "", traffic: "web search", news: t.summary ? [t.summary] : [], source: "perplexity" })).filter(t => t.title);
+}
+
+async function loadTrends() {
+  state.tStatus = "loading";
+  state.trends  = [];
+  renderTrendPill();
+  renderTrendsBox();
+  setEmptyTxt();
+  try {
+    const data = state.source === "perplexity" ? await fetchPerplexity() : await fetchReddit();
+    state.trends  = data;
+    state.tStatus = "ok";
+    state.showTrends = true;
+  } catch(e) {
+    state.tStatus = "error";
+    state.tErr    = e.message;
+  }
+  renderTrendPill();
+  renderTrendsBox();
+  setEmptyTxt();
+}
+
+function filterTrends() {
+  const kw = TOPIC_KW[state.activeTopic];
+  if (!kw) return state.trends;
+  const f = state.trends.filter(t => kw.some(k => t.title.toLowerCase().includes(k) || t.news.some(n => n.toLowerCase().includes(k))));
+  return f.length ? f : state.trends;
+}
+
+// ─── Render helpers ─────────────────────────────────────────────────────────
+function renderTrendPill() {
+  const p = document.getElementById("trend-pill");
+  if (state.tStatus === "loading") { p.className = "pill pill-gray"; p.textContent = "⟳ fetching..."; }
+  else if (state.tStatus === "ok")  { p.className = "pill pill-green"; p.textContent = `✓ ${state.trends.length} topik`; }
+  else if (state.tStatus === "error") { p.className = "pill pill-red"; p.textContent = "✗ gagal"; }
+  else { p.className = "pill pill-gray"; p.textContent = "—"; }
+}
+
+function renderTrendsBox() {
+  const lbl  = document.getElementById("trends-lbl");
+  const list = document.getElementById("trends-list");
+  const err  = document.getElementById("trends-err");
+
+  if (state.tStatus === "loading") { lbl.textContent = "⟳ fetching trends..."; list.innerHTML = ""; list.classList.remove("open"); err.style.display = "none"; return; }
+  if (state.tStatus === "error")   { lbl.textContent = "⚠ gagal load trends"; list.classList.remove("open"); err.style.display = "flex"; document.getElementById("trends-err-msg").textContent = state.tErr; return; }
+  if (!state.trends.length)        { lbl.textContent = "belum ada data"; return; }
+
+  lbl.textContent = `📊 ${state.trends.length} topik loaded — klik untuk lihat`;
+  err.style.display = "none";
+  if (state.showTrends) { list.classList.add("open"); renderTrendList(); }
+
+  document.getElementById("trends-arrow").textContent = state.showTrends ? "▲" : "▼";
+}
+
+function renderTrendList() {
+  const list = document.getElementById("trends-list");
+  list.innerHTML = state.trends.slice(0, 15).map((t, i) => `
+    <div class="t-item">
+      <span class="t-num">${i+1}</span>
+      <div class="t-body">
+        <span class="t-title">${esc(t.title.length > 72 ? t.title.slice(0,72)+"…" : t.title)}</span>
+        ${t.news[0] ? `<span class="t-sub">${esc(t.news[0].slice(0,90))}</span>` : ""}
+      </div>
+      <span class="t-traffic">${esc(t.traffic)}</span>
+    </div>`).join("");
+}
+
+document.getElementById("trends-toggle").addEventListener("click", () => {
+  if (state.tStatus !== "ok") return;
+  state.showTrends = !state.showTrends;
+  document.getElementById("trends-arrow").textContent = state.showTrends ? "▲" : "▼";
+  const list = document.getElementById("trends-list");
+  if (state.showTrends) { list.classList.add("open"); renderTrendList(); }
+  else list.classList.remove("open");
+});
+
+document.getElementById("refresh-btn").addEventListener("click", loadTrends);
+
+// ─── Topic / Length chips ───────────────────────────────────────────────────
+document.getElementById("topic-chips").addEventListener("click", e => {
+  const btn = e.target.closest("[data-topic]");
+  if (!btn) return;
+  state.activeTopic = btn.dataset.topic;
+  document.querySelectorAll("[data-topic]").forEach(b => b.classList.remove("active-y"));
+  btn.classList.add("active-y");
+});
+
+document.getElementById("length-chips").addEventListener("click", e => {
+  const btn = e.target.closest("[data-len]");
+  if (!btn) return;
+  state.activeLength = btn.dataset.len;
+  document.querySelectorAll("[data-len]").forEach(b => b.classList.remove("active-w"));
+  btn.classList.add("active-w");
+});
+
+// ─── Generate ───────────────────────────────────────────────────────────────
+async function orPost(messages) {
+  if (!state.key) throw new Error("API key belum diset — klik ⚙ di atas");
+  let lastErr = null;
+  for (const model of FREE_MODELS) {
+    try {
+      const res = await fetch(OR_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${state.key}`, "HTTP-Referer": location.href, "X-Title": "PostGen ID" },
+        body: JSON.stringify({ model, max_tokens: 500, messages }),
+      });
+      const data = await res.json();
+      if (data.error) { lastErr = new Error(`${model.split("/")[1]}: ${data.error.message}`); continue; }
+      const text = data.choices?.[0]?.message?.content?.trim();
+      if (!text) { lastErr = new Error(`${model.split("/")[1]}: response kosong`); continue; }
+      return { text, model };
+    } catch(e) { lastErr = e; }
+  }
+  throw lastErr || new Error("Semua model gagal");
+}
+
+document.getElementById("gen-btn").addEventListener("click", async () => {
+  const errEl = document.getElementById("gen-err");
+  if (state.generating || state.tStatus !== "ok") {
+    if (state.tStatus !== "ok") showGenErr("Load trends dulu. Klik ↻ refresh.");
+    return;
+  }
+  state.generating = true;
+  errEl.style.display = "none";
+  const btn = document.getElementById("gen-btn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin">◌</span> nulis postingan...`;
+
+  try {
+    const filtered = filterTrends().slice(0, 7);
+    const ctx = filtered.map((t, i) =>
+      `${i+1}. "${t.title}"${t.traffic !== "web search" ? ` [${t.traffic}]` : ""}${t.news[0] ? ` — ${t.news[0].slice(0,100)}` : ""}`
+    ).join("\n");
+
+    const lengthP = LENGTH_PROMPT[state.activeLength] || LENGTH_PROMPT.auto;
+    const userMsg = `Trending di Indonesia sekarang:\n\n${ctx}\n\n${lengthP}\n\nPilih topik paling menarik, tulis 1 postingan Twitter/X gaya @setyamickala.`;
+
+    const { text, model } = await orPost([
+      { role: "system", content: STYLE_GUIDE },
+      { role: "user",   content: userMsg },
+    ]);
+
+    addCard({ text, trend: filtered[0]?.title || "-", model });
+    document.getElementById("empty").style.display = "none";
+  } catch(e) {
+    showGenErr(e.message);
+  } finally {
+    state.generating = false;
+    btn.disabled = false;
+    btn.textContent = "⚡ Generate Postingan";
+  }
+});
+
+function showGenErr(msg) {
+  const el = document.getElementById("gen-err");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+
+// ─── Cards ───────────────────────────────────────────────────────────────────
+function addCard({ text, trend, model }) {
+  const ts    = new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  const topicLabel  = document.querySelector("[data-topic].active-y")?.textContent || "";
+  const lengthLabel = document.querySelector("[data-len].active-w")?.textContent || "";
+  const shortModel  = model.split("/")[1]?.split(":")[0] || model;
+  const id = "c" + Date.now();
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.id = id;
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="card-tags">
+        <span class="tag-y">${esc(topicLabel)}</span>
+        <span class="tag-g">${esc(lengthLabel)}</span>
+        <span class="tag-d" title="${esc(trend)}">${esc(trend.length > 30 ? trend.slice(0,30)+"…" : trend)}</span>
+        <span class="tag-d" style="color:#1e1e1e">${esc(shortModel)}</span>
+      </div>
+      <span class="card-ts">${ts}</span>
+    </div>
+    <pre class="card-text">${esc(text)}</pre>
+    <div class="card-bot">
+      <span class="card-chars">${text.length} chars</span>
+      <div class="card-btns">
+        <button class="card-btn" onclick="copyCard('${id}', this)">${"copy"}</button>
+        <button class="card-btn del" onclick="document.getElementById('${id}').remove();checkEmpty()">hapus</button>
+      </div>
+    </div>`;
+
+  const feed = document.getElementById("feed");
+  feed.insertBefore(card, feed.firstChild);
+}
+
+function copyCard(id, btn) {
+  const text = document.querySelector(`#${id} .card-text`)?.textContent || "";
+  navigator.clipboard.writeText(text);
+  btn.textContent = "✓ copied";
+  btn.classList.add("copied");
+  setTimeout(() => { btn.textContent = "copy"; btn.classList.remove("copied"); }, 2200);
+}
+
+function checkEmpty() {
+  const feed = document.getElementById("feed");
+  document.getElementById("empty").style.display = feed.children.length === 0 ? "" : "none";
+}
+
+// ─── Utils ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function setEmptyTxt() {
+  const t = state.tStatus === "ok" ? `${state.trends.length} topik siap — pilih filter & generate`
+    : state.tStatus === "loading"  ? "mengambil trends..."
+    : state.tStatus === "error"    ? "gagal load — ganti sumber atau retry"
+    : "pilih sumber & load trends";
+  document.getElementById("empty-txt").textContent = t;
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+updateKeyBanner();
+loadTrends();
+</script>
+</body>
+</html>
