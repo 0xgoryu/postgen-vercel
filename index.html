@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>postgen_id</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070707;--bg2:#0d0d0d;--border:#1c1c1c;--border2:#111;
+  --text:#e0ddd2;--accent:#c8ff47;--red:#f87171;--green:#4ade80;
+}
+html,body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+button{cursor:pointer;transition:opacity .12s,transform .1s;font-family:'Syne',sans-serif;outline:none;border:none}
+button:hover:not(:disabled){opacity:.82}
+button:active:not(:disabled){transform:scale(.97)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#1e1e1e}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+.mono{font-family:'Space Mono',monospace}
+
+/* ── Header ── */
+#hdr{position:sticky;top:0;z-index:20;background:rgba(7,7,7,.96);backdrop-filter:blur(18px);border-bottom:1px solid #0f0f0f}
+#hdr-in{max-width:800px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:-.5px}
+.logo-sub{font-family:'Space Mono',monospace;font-size:8px;color:#252525;margin-top:2px}
+.hdr-r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pill{font-family:'Space Mono',monospace;font-size:8px;padding:2px 7px;border-radius:100px;border:1px solid #1e1e1e}
+.pg{color:#333;background:#0e0e0e}.pgreen{color:var(--green);background:#091509;border-color:#153015}
+.pyellow{color:var(--accent);background:rgba(200,255,71,.05);border-color:#253500}
+.pred{color:var(--red);background:#150909;border-color:#301515}
+.icon-btn{font-size:11px;color:#444;background:none;border:1px solid #1c1c1c!important;border-radius:6px;padding:4px 9px;font-family:'Space Mono',monospace}
+
+/* ── Main ── */
+#main{max-width:800px;margin:0 auto;padding:16px 20px 80px}
+
+/* ── Settings ── */
+#settings{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden}
+#stg-hdr{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:none;color:var(--text)}
+.stg-title{font-family:'Space Mono',monospace;font-size:10px;color:#3a3a3a}
+#stg-body{padding:0 16px 16px;display:none;flex-direction:column;gap:10px}
+#stg-body.open{display:flex}
+.stg-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.stg-lbl{font-family:'Space Mono',monospace;font-size:8px;color:#333;letter-spacing:1px;text-transform:uppercase;min-width:120px}
+.stg-inp{flex:1;min-width:200px;background:#080808;border:1px solid #1c1c1c!important;border-radius:6px;padding:7px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none}
+.stg-inp:focus{border-color:var(--accent)!important}
+.stg-inp.has{border-color:#253500!important;color:var(--accent)}
+.stg-save{background:var(--accent);color:#070707;border-radius:6px;padding:6px 12px;font-weight:700;font-size:11px}
+.stg-bdg{font-family:'Space Mono',monospace;font-size:8px;padding:2px 6px;border-radius:4px;background:#111;color:#333}
+.stg-bdg.ok{background:#091509;color:var(--green)}
+.stg-note{font-family:'Space Mono',monospace;font-size:9px;color:#252525;line-height:1.9;padding:4px 0 2px}
+
+/* ── Source Grid ── */
+#src-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;margin-bottom:14px}
+.src-card{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;font-size:12px;font-weight:600;color:#444;position:relative}
+.src-card .dot{width:5px;height:5px;border-radius:50%;background:#222;flex-shrink:0}
+.src-card.idle{color:#444}
+.src-card.loading{color:#666}.src-card.loading .dot{background:var(--accent);animation:blink .7s infinite}
+.src-card.ok{color:var(--text);border-color:#1e2e1e}.src-card.ok .dot{background:var(--green)}
+.src-card.err{color:#444;border-color:#1e1616}.src-card.err .dot{background:var(--red)}
+.src-badge{font-family:'Space Mono',monospace;font-size:7px;color:#222;margin-left:auto}
+.src-card.ok .src-badge{color:#2a4a2a}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── Scrape button ── */
+#scrape-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+#scrape-btn{background:var(--accent);color:#070707;border-radius:9px;padding:9px 22px;font-weight:800;font-size:13px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+#scrape-btn:disabled{opacity:.5}
+#sel-info{font-family:'Space Mono',monospace;font-size:10px;color:#2a2a2a;margin-left:auto}
+
+/* ── Checklist ── */
+#cl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden}
+#cl-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #0f0f0f}
+.cl-title{font-family:'Space Mono',monospace;font-size:9px;color:#2e2e2e;letter-spacing:1px;text-transform:uppercase}
+.cl-acts{display:flex;gap:5px}
+.cl-act{font-family:'Space Mono',monospace;font-size:8px;color:#3a3a3a;background:#0f0f0f;border:1px solid #1a1a1a!important;border-radius:4px;padding:3px 8px}
+#cl-body{max-height:500px;overflow-y:auto}
+
+/* source filter tabs */
+#src-tabs{display:flex;gap:4px;padding:8px 14px;border-bottom:1px solid #0f0f0f;flex-wrap:wrap;background:#090909}
+.stab{font-family:'Space Mono',monospace;font-size:8px;padding:3px 8px;border-radius:100px;border:1px solid #1a1a1a!important;background:transparent;color:#333}
+.stab.on{background:#1a1a1a;color:#999;border-color:#2a2a2a!important}
+
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #0a0a0a;cursor:pointer;transition:background .1s;user-select:none}
+.cl-item:hover{background:#0f0f0f}
+.cl-item.on{background:rgba(200,255,71,.02)}
+.cl-item:last-child{border-bottom:none}
+.cl-cb{width:14px;height:14px;border:1px solid #2a2a2a;border-radius:3px;flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center}
+.cl-item.on .cl-cb{background:var(--accent);border-color:var(--accent)}
+.cl-chk{font-size:8px;color:#070707;visibility:hidden}
+.cl-item.on .cl-chk{visibility:visible}
+.cl-body{flex:1;min-width:0}
+.cl-r1{display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap}
+.cl-src{font-family:'Space Mono',monospace;font-size:7px;padding:1px 5px;border-radius:3px;font-weight:700;flex-shrink:0}
+.s-reddit{background:#1e0f05;color:#fb923c}
+.s-crypto{background:#0f1505;color:#a3e635}
+.s-ekonomi{background:#050f1e;color:#60a5fa}
+.s-saham{background:#0f0f1e;color:#818cf8}
+.s-tech{background:#1e0f1e;color:#e879f9}
+.s-property{background:#0f1a0f;color:#34d399}
+.s-tiktok{background:#1a0520;color:#f472b6}
+.s-instagram{background:#1e0515;color:#f9a8d4}
+.s-webtrends{background:#050f1a;color:#7dd3fc}
+.s-viral{background:#1a0f05;color:#fdba74}
+.cl-sub{font-family:'Space Mono',monospace;font-size:7px;color:#252525}
+.cl-val{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;margin-left:auto;flex-shrink:0}
+.val-up{color:#4ade80}.val-dn{color:#f87171}.val-neu{color:#666}
+.cl-txt{font-size:13px;color:#777;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cl-item.on .cl-txt{color:#aaa}
+.cl-meta{font-family:'Space Mono',monospace;font-size:8px;color:#232323;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-empty{padding:36px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:#252525;line-height:2}
+
+/* ── Generate ── */
+#gen-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:20px}
+.gbox-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.gbox-lbl{font-family:'Space Mono',monospace;font-size:8px;color:#2e2e2e;letter-spacing:1px;text-transform:uppercase}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:600;padding:5px 12px;border-radius:100px;border:1px solid #1e1e1e!important;background:transparent;color:#444}
+.chip.on{background:#e0ddd2;color:#070707;border-color:#e0ddd2!important}
+#gen-btn{width:100%;padding:13px;background:var(--accent);color:#070707;border-radius:10px;font-size:14px;font-weight:800;letter-spacing:-.2px}
+#gen-btn:disabled{opacity:.4;cursor:not-allowed}
+#gen-err{margin-top:9px;font-family:'Space Mono',monospace;font-size:10px;color:var(--red);text-align:center;display:none}
+.hint{font-family:'Space Mono',monospace;font-size:9px;color:#252525;text-align:center;margin-top:8px}
+
+/* ── Feed ── */
+#feed{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;animation:fadeUp .2s ease}
+.card-top{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;border-bottom:1px solid #0c0c0c;background:#080808}
+.ctags{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.ctag{font-family:'Space Mono',monospace;font-size:7px;padding:2px 7px;border-radius:100px}
+.ct-a{color:var(--accent);background:rgba(200,255,71,.06);border:1px solid rgba(200,255,71,.1)}
+.ct-g{color:#333;background:#0f0f0f;border:1px solid #1a1a1a}
+.ct-d{color:#1e1e1e}
+.card-ts{font-family:'Space Mono',monospace;font-size:8px;color:#1a1a1a}
+.card-txt{font-family:'Space Mono',monospace;font-size:13px;color:#d5d2c8;line-height:1.9;white-space:pre-wrap;word-break:break-word;padding:15px 15px 11px}
+.card-bot{display:flex;align-items:center;justify-content:space-between;padding:7px 13px;border-top:1px solid #0c0c0c;background:#080808}
+.card-ch{font-family:'Space Mono',monospace;font-size:8px;color:#1a1a1a}
+.card-btns{display:flex;gap:5px}
+.cbtn{font-family:'Space Mono',monospace;font-size:9px;color:#444;background:#0f0f0f;border:1px solid #1a1a1a!important;border-radius:5px;padding:4px 9px}
+.cbtn.copied{color:var(--green)}.cbtn.del{color:#222}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div id="hdr-in">
+    <div>
+      <div class="logo">postgen_id</div>
+      <div class="logo-sub mono">scrape → pilih → generate</div>
+    </div>
+    <div class="hdr-r">
+      <span id="pill-or"    class="pill pg">OR —</span>
+      <span id="pill-apify" class="pill pg">Apify —</span>
+      <button class="icon-btn" onclick="toggleSettings()">⚙ keys</button>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+
+<!-- Settings -->
+<div id="settings">
+  <button id="stg-hdr" onclick="toggleSettings()">
+    <span class="stg-title">⚙ API KEYS KONFIGURASI</span>
+    <span class="mono" id="stg-arr" style="font-size:10px;color:#222">▼</span>
+  </button>
+  <div id="stg-body">
+    <div class="stg-row">
+      <span class="stg-lbl">OpenRouter Key</span>
+      <input class="stg-inp" id="inp-or" type="password" placeholder="sk-or-v1-... (generate + Web Trends)"/>
+      <button class="stg-save" onclick="saveKey('or')">Simpan</button>
+      <span class="stg-bdg" id="bdg-or">—</span>
+    </div>
+    <div class="stg-row">
+      <span class="stg-lbl">Apify API Token</span>
+      <input class="stg-inp" id="inp-apify" type="password" placeholder="apify_api_... (TikTok + Instagram)"/>
+      <button class="stg-save" onclick="saveKey('apify')">Simpan</button>
+      <span class="stg-bdg" id="bdg-apify">—</span>
+    </div>
+    <div class="stg-note">
+      Reddit · CoinGecko · Binance · USD/IDR → gratis, no key &nbsp;·&nbsp;
+      Web Trends / Tech / Property → OpenRouter (Perplexity Sonar, ada cost kecil) &nbsp;·&nbsp;
+      TikTok & Instagram → Apify: daftar di apify.com → Settings → Integrations → API token
+    </div>
+  </div>
+</div>
+
+<!-- Source Grid -->
+<div id="src-grid">
+  <div class="src-card idle" id="sc-reddit">    <span class="dot"></span>🟠 Reddit     <span class="src-badge" id="sb-reddit">—</span></div>
+  <div class="src-card idle" id="sc-crypto">    <span class="dot"></span>₿ Crypto      <span class="src-badge" id="sb-crypto">—</span></div>
+  <div class="src-card idle" id="sc-ekonomi">   <span class="dot"></span>💵 Ekonomi    <span class="src-badge" id="sb-ekonomi">—</span></div>
+  <div class="src-card idle" id="sc-saham">     <span class="dot"></span>📈 Saham      <span class="src-badge" id="sb-saham">—</span></div>
+  <div class="src-card idle" id="sc-tech">      <span class="dot"></span>🚀 Tech       <span class="src-badge" id="sb-tech">—</span></div>
+  <div class="src-card idle" id="sc-property">  <span class="dot"></span>🏠 Property   <span class="src-badge" id="sb-property">—</span></div>
+  <div class="src-card idle" id="sc-viral">     <span class="dot"></span>🔥 Viral News <span class="src-badge" id="sb-viral">—</span></div>
+  <div class="src-card idle" id="sc-tiktok">    <span class="dot"></span>🎵 TikTok     <span class="src-badge" id="sb-tiktok">—</span></div>
+  <div class="src-card idle" id="sc-instagram"> <span class="dot"></span>📸 Instagram  <span class="src-badge" id="sb-instagram">—</span></div>
+  <div class="src-card idle" id="sc-webtrends"> <span class="dot"></span>🔍 Web Trends <span class="src-badge" id="sb-webtrends">—</span></div>
+</div>
+
+<!-- Scrape Row -->
+<div id="scrape-row">
+  <button id="scrape-btn" onclick="scrapeAll()">⚡ Scrape Semua</button>
+  <span id="sel-info" class="mono"></span>
+</div>
+
+<!-- Checklist -->
+<div id="cl-wrap">
+  <div id="cl-head">
+    <span class="cl-title" id="cl-count-lbl">BAHAN KONTEN</span>
+    <div class="cl-acts">
+      <button class="cl-act" onclick="selectAll()">Pilih Semua</button>
+      <button class="cl-act" onclick="clearSel()">Reset</button>
+      <button class="cl-act" id="filt-btn" onclick="toggleFilter()">Terpilih Saja</button>
+    </div>
+  </div>
+  <div id="src-tabs">
+    <button class="stab on" data-tab="all" onclick="setTab('all',this)">Semua</button>
+    <button class="stab" data-tab="reddit"    onclick="setTab('reddit',this)">🟠 Reddit</button>
+    <button class="stab" data-tab="crypto"    onclick="setTab('crypto',this)">₿ Crypto</button>
+    <button class="stab" data-tab="ekonomi"   onclick="setTab('ekonomi',this)">💵 Ekonomi</button>
+    <button class="stab" data-tab="saham"     onclick="setTab('saham',this)">📈 Saham</button>
+    <button class="stab" data-tab="tech"      onclick="setTab('tech',this)">🚀 Tech</button>
+    <button class="stab" data-tab="property"  onclick="setTab('property',this)">🏠 Property</button>
+    <button class="stab" data-tab="viral"     onclick="setTab('viral',this)">🔥 Viral</button>
+    <button class="stab" data-tab="tiktok"    onclick="setTab('tiktok',this)">🎵 TikTok</button>
+    <button class="stab" data-tab="instagram" onclick="setTab('instagram',this)">📸 IG</button>
+    <button class="stab" data-tab="webtrends" onclick="setTab('webtrends',this)">🔍 Web</button>
+  </div>
+  <div id="cl-body">
+    <div class="cl-empty">
+      Klik ⚡ <b>Scrape Semua</b> untuk mengambil bahan konten dari semua sumber<br><br>
+      Reddit · CoinGecko · Binance · USD/IDR → langsung (no key)<br>
+      Web Trends · Tech · Saham · Property · Viral → butuh OpenRouter key<br>
+      TikTok · Instagram → butuh Apify token
+    </div>
+  </div>
+</div>
+
+<!-- Generate -->
+<div id="gen-box">
+  <div class="gbox-row">
+    <span class="gbox-lbl">panjang</span>
+    <div class="chips" id="len-chips">
+      <button class="chip" data-len="short">Pendek</button>
+      <button class="chip" data-len="medium">Sedang</button>
+      <button class="chip" data-len="long">Panjang</button>
+      <button class="chip on" data-len="auto">✨ Auto</button>
+    </div>
+  </div>
+  <button id="gen-btn" onclick="generate()" disabled>⚡ Generate dari Bahan Terpilih</button>
+  <div id="gen-err"></div>
+  <div class="hint" id="hint">← centang minimal 1 bahan dari checklist</div>
+</div>
+
+<div id="feed"></div>
+</div>
+
+<script>
+// ─── Constants ────────────────────────────────────────────────────────────────
+const OR_URL = "https://openrouter.ai/api/v1/chat/completions";
+const MODELS  = ["deepseek/deepseek-chat","google/gemini-2.0-flash-001","google/gemini-flash-1.5","deepseek/deepseek-r1","anthropic/claude-haiku-4-5","openai/gpt-4o-mini"];
+const LEN = {
+  short:  "Tulis sangat pendek, 2-4 baris. Punch, langsung.",
+  medium: "Tulis 5-8 baris, boleh mini-breakdown.",
+  long:   "Tulis 10-15 baris. Storytelling mendalam.",
+  auto:   "Pilih panjang paling natural dan efektif.",
+};
+const STYLE = `Kamu adalah ghost-writer Twitter/X Indonesia @setyamickala.
+Gaya WAJIB:
+- Kasual, santai, ngobrol sama temen
+- Bahasa indo-inggris campur (dominan indo)
+- Observasi tajam, anti-hype, kadang satiris/relatable
+- Paragraf sangat pendek, banyak line break
+- Sesekali "Unpopular opinion:" atau akhiri "menurut lu?"
+- NO hashtag. Emoji minimal (😹🤣🥴💀)
+- Data/angka spesifik kalau ada, bikin credible
+Contoh:
+---
+enak banget holding usd
+kalau ga dipakai bisa buat farming yield, kalaupun udah cukup bisa dijual lagi ke idr dengan rate Rp. 17,100 😹
+wkwkwk
+---
+Timeline lagi rame:
+resign kerja > full AI agent > cuan gede
+
+tapi jujur aja: berapa % yang beneran berhasil?
+yang dipost: profit. data failure rate diumpetin.
+
+ini peluang legit… atau cuma marketing lama dibungkus AI?
+menurut lu?
+---
+Output HANYA isi postingan. Tanpa preamble. Tanpa tanda kutip.`;
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let K = { or: ls("pg_or"), apify: ls("pg_apify") };
+let items=[], sel=new Set(), activeLen="auto", scraping=false, generating=false;
+let filterOn=false, activeTab="all";
+
+function ls(k){ return localStorage.getItem(k)||""; }
+
+// ─── Keys UI ──────────────────────────────────────────────────────────────────
+function saveKey(k){
+  const v=document.getElementById("inp-"+k).value.trim(); if(!v)return;
+  K[k]=v; localStorage.setItem("pg_"+k,v); refreshKeyUI();
+}
+function refreshKeyUI(){
+  ["or","apify"].forEach(k=>{
+    const inp=document.getElementById("inp-"+k), b=document.getElementById("bdg-"+k);
+    if(K[k]){ inp.classList.add("has"); inp.value=K[k].slice(0,10)+"···"; b.className="stg-bdg ok"; b.textContent="✓"; }
+    else     { inp.classList.remove("has"); b.className="stg-bdg"; b.textContent="—"; }
+  });
+  p("pill-or",   K.or    ?"OR ✓":"OR —",    K.or    ?"pgreen":"pg");
+  p("pill-apify",K.apify ?"Apify ✓":"Apify —",K.apify?"pyellow":"pg");
+}
+function p(id,t,c){ const el=document.getElementById(id); el.textContent=t; el.className="pill "+c; }
+function toggleSettings(){
+  const b=document.getElementById("stg-body"), open=b.classList.toggle("open");
+  document.getElementById("stg-arr").textContent=open?"▲":"▼";
+}
+
+// ─── Source card status ───────────────────────────────────────────────────────
+function ss(src,status,n){
+  const c=document.getElementById("sc-"+src), b=document.getElementById("sb-"+src);
+  if(!c)return;
+  c.className="src-card "+(status==="ok"?"ok":status==="loading"?"loading":status==="err"?"err":"idle");
+  if(b) b.textContent = n!=null ? n+" item" : (status==="loading"?"...":"—");
+}
+
+// ─── Perplexity helper ───────────────────────────────────────────────────────
+async function askPerplexity(prompt){
+  if(!K.or) throw new Error("no OR key");
+  const r=await fetch(OR_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+K.or,"HTTP-Referer":location.href},
+    body:JSON.stringify({model:"perplexity/sonar",max_tokens:900,messages:[{role:"user",content:prompt}]}),
+    signal:AbortSignal.timeout(25000),
+  });
+  const j=await r.json();
+  if(j.error) throw new Error(j.error.message);
+  const raw=(j.choices?.[0]?.message?.content||"").trim().replace(/^```json|^```|```$/gm,"").trim();
+  return JSON.parse(raw);
+}
+
+// ─── Scrapers ─────────────────────────────────────────────────────────────────
+
+// 1. Reddit
+async function scrapeReddit(){
+  ss("reddit","loading");
+  const feeds=[
+    {u:"https://www.reddit.com/r/indonesia/hot.json?limit=20",      lbl:"r/indonesia"},
+    {u:"https://www.reddit.com/r/investasiid/hot.json?limit=10",    lbl:"r/investasiid"},
+    {u:"https://www.reddit.com/r/indodank/hot.json?limit=8",        lbl:"r/indodank"},
+    {u:"https://www.reddit.com/r/Berita/hot.json?limit=8",          lbl:"r/berita"},
+  ];
+  const out=[];
+  for(const {u,lbl} of feeds){
+    try{
+      const r=await fetch(u,{headers:{"User-Agent":"postgen/1.0"},signal:AbortSignal.timeout(7000)});
+      if(!r.ok)continue;
+      const j=await r.json();
+      for(const p of(j?.data?.children||[])){
+        const d=p.data;
+        if(!d.title||out.find(x=>x.title===d.title))continue;
+        out.push({id:"rd-"+d.id,src:"reddit",lbl,title:d.title,meta:d.selftext?d.selftext.slice(0,110):"",score:d.score||0,val:null});
+      }
+    }catch(_){}
+  }
+  ss("reddit",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 2. Crypto — CoinGecko trending + top movers
+async function scrapeCrypto(){
+  ss("crypto","loading");
+  const out=[];
+  try{
+    // Trending coins
+    const r1=await fetch("https://api.coingecko.com/api/v3/search/trending",{signal:AbortSignal.timeout(8000)});
+    if(r1.ok){
+      const j1=await r1.json();
+      for(const c of(j1.coins||[]).slice(0,7)){
+        const it=c.item;
+        const pct=it.data?.price_change_percentage_24h?.usd;
+        out.push({id:"cg-"+it.id,src:"crypto",lbl:"CoinGecko trending",
+          title:`${it.name} (${it.symbol}) trending di crypto`,
+          meta:`Rank #${it.market_cap_rank||"?"} · 24h: ${pct!=null?(pct>0?"+":"")+pct.toFixed(1)+"%":"?"}`,
+          score:1000-(it.market_cap_rank||999),val:pct,valType:"pct"});
+      }
+    }
+    // Top coins prices
+    const r2=await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana,bnb,xrp&order=market_cap_desc&per_page=5&price_change_percentage=24h",{signal:AbortSignal.timeout(8000)});
+    if(r2.ok){
+      const j2=await r2.json();
+      for(const c of j2){
+        const pct=c.price_change_percentage_24h;
+        out.push({id:"cg2-"+c.id,src:"crypto",lbl:"CoinGecko",
+          title:`${c.name} $${fmt(c.current_price)} (${pct>0?"+":""}${pct?.toFixed(1)}% 24h)`,
+          meta:`Market cap: $${fmt(c.market_cap)} · Volume: $${fmt(c.total_volume)}`,
+          score:c.market_cap/1e8||0,val:pct,valType:"pct"});
+      }
+    }
+  }catch(e){console.warn("crypto:",e.message);}
+  ss("crypto",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 3. Ekonomi — USD/IDR + macro
+async function scrapeEkonomi(){
+  ss("ekonomi","loading");
+  const out=[];
+  try{
+    // USD/IDR via open exchange rate (free, CORS)
+    const r=await fetch("https://open.er-api.com/v6/latest/USD",{signal:AbortSignal.timeout(7000)});
+    if(r.ok){
+      const j=await r.json();
+      const idr=j.rates?.IDR;
+      if(idr) out.push({id:"er-usdidr",src:"ekonomi",lbl:"ExchangeRate-API",
+        title:`USD/IDR hari ini: Rp ${Math.round(idr).toLocaleString("id-ID")}`,
+        meta:`Updated: ${j.time_last_update_utc?.slice(0,16)||"today"}`,
+        score:100,val:null});
+    }
+  }catch(_){}
+  try{
+    // BTC/IDR via Binance
+    const r=await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",{signal:AbortSignal.timeout(7000)});
+    if(r.ok){
+      const j=await r.json();
+      const pct=parseFloat(j.priceChangePercent);
+      out.push({id:"bn-btc",src:"ekonomi",lbl:"Binance",
+        title:`Bitcoin ${pct>=0?"naik":"turun"} ${Math.abs(pct).toFixed(2)}% dalam 24 jam`,
+        meta:`Harga: $${parseFloat(j.lastPrice).toLocaleString()} · High: $${parseFloat(j.highPrice).toLocaleString()}`,
+        score:90,val:pct,valType:"pct"});
+    }
+  }catch(_){}
+  try{
+    // ETH
+    const r=await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT",{signal:AbortSignal.timeout(7000)});
+    if(r.ok){
+      const j=await r.json();
+      const pct=parseFloat(j.priceChangePercent);
+      out.push({id:"bn-eth",src:"ekonomi",lbl:"Binance",
+        title:`Ethereum ${pct>=0?"naik":"turun"} ${Math.abs(pct).toFixed(2)}% hari ini`,
+        meta:`Harga: $${parseFloat(j.lastPrice).toLocaleString()}`,
+        score:80,val:pct,valType:"pct"});
+    }
+  }catch(_){}
+  // Perplexity for macro news
+  if(K.or){
+    try{
+      const arr=await askPerplexity(`Cari 6 berita ekonomi makro Indonesia terbaru hari ini: BI rate, inflasi, GDP, APBN, kebijakan fiskal, rupiah.
+JSON array ONLY: [{"title":"...","meta":"1 kalimat konteks"}]`);
+      arr.filter(t=>t.title).forEach((t,i)=>
+        out.push({id:"em-"+i,src:"ekonomi",lbl:"web search",title:t.title,meta:t.meta||"",score:70-i,val:null})
+      );
+    }catch(_){}
+  }
+  ss("ekonomi",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 4. Saham Indo
+async function scrapeSaham(){
+  ss("saham","loading");
+  const out=[];
+  if(!K.or){ss("saham","err",0);return out;}
+  try{
+    const arr=await askPerplexity(`Cari 10 berita saham dan investasi Indonesia terbaru hari ini: IHSG, IDX, saham gorengan, emiten naik/turun, IPO, dividen, analisa market. Include angka spesifik.
+JSON array ONLY: [{"title":"...","meta":"1 kalimat + angka spesifik","score":1-100}]`);
+    arr.filter(t=>t.title).forEach((t,i)=>
+      out.push({id:"sh-"+i,src:"saham",lbl:"web search",title:t.title,meta:t.meta||"",score:t.score||50-i,val:null})
+    );
+  }catch(e){console.warn("saham:",e.message);}
+  ss("saham",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 5. Tech & Startup
+async function scrapeTech(){
+  ss("tech","loading");
+  const out=[];
+  // Reddit tech
+  try{
+    const r=await fetch("https://www.reddit.com/r/teknologi/hot.json?limit=10",{headers:{"User-Agent":"postgen/1.0"},signal:AbortSignal.timeout(7000)});
+    if(r.ok){
+      const j=await r.json();
+      for(const p of(j?.data?.children||[]).slice(0,8)){
+        const d=p.data;
+        if(d.title) out.push({id:"te-rd-"+d.id,src:"tech",lbl:"r/teknologi",title:d.title,meta:d.selftext?d.selftext.slice(0,100):"",score:d.score||0,val:null});
+      }
+    }
+  }catch(_){}
+  // Perplexity
+  if(K.or){
+    try{
+      const arr=await askPerplexity(`Cari 8 berita tech & startup Indonesia terbaru: AI lokal, unicorn, funding round, produk baru, kebijakan digital, startup bangkrut/sukses, app viral.
+JSON array ONLY: [{"title":"...","meta":"1 kalimat konteks","score":1-100}]`);
+      arr.filter(t=>t.title).forEach((t,i)=>
+        out.push({id:"te-"+i,src:"tech",lbl:"web search",title:t.title,meta:t.meta||"",score:t.score||50,val:null})
+      );
+    }catch(e){console.warn("tech:",e.message);}
+  }
+  ss("tech",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 6. Property
+async function scrapeProperty(){
+  ss("property","loading");
+  const out=[];
+  if(!K.or){ss("property","err",0);return out;}
+  try{
+    const arr=await askPerplexity(`Cari 8 berita properti dan real estate Indonesia terbaru: harga rumah, KPR, kawasan baru, developer, subsidi perumahan, apartemen, kebijakan pemerintah soal properti.
+JSON array ONLY: [{"title":"...","meta":"1 kalimat konteks spesifik"}]`);
+    arr.filter(t=>t.title).forEach((t,i)=>
+      out.push({id:"pr-"+i,src:"property",lbl:"web search",title:t.title,meta:t.meta||"",score:50-i,val:null})
+    );
+  }catch(e){console.warn("property:",e.message);}
+  ss("property",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 7. Viral News
+async function scrapeViral(){
+  ss("viral","loading");
+  const out=[];
+  // Reddit viral
+  try{
+    const r=await fetch("https://www.reddit.com/r/indonesia/search.json?q=viral&sort=hot&limit=10",{headers:{"User-Agent":"postgen/1.0"},signal:AbortSignal.timeout(7000)});
+    if(r.ok){
+      const j=await r.json();
+      for(const p of(j?.data?.children||[]).slice(0,8)){
+        const d=p.data;
+        if(d.title) out.push({id:"vi-rd-"+d.id,src:"viral",lbl:"r/indonesia",title:d.title,meta:"",score:d.score||0,val:null});
+      }
+    }
+  }catch(_){}
+  if(K.or){
+    try{
+      const arr=await askPerplexity(`Cari 10 berita/konten viral dan trending di Indonesia hari ini: meme, drama sosmed, kejadian lucu, hot takes, kontroversi, berita aneh, opini yang rame diperdebatkan.
+JSON array ONLY: [{"title":"...","meta":"1 kalimat konteks","score":1-100}]`);
+      arr.filter(t=>t.title).forEach((t,i)=>
+        out.push({id:"vi-"+i,src:"viral",lbl:"web search",title:t.title,meta:t.meta||"",score:t.score||60,val:null})
+      );
+    }catch(e){console.warn("viral:",e.message);}
+  }
+  ss("viral",out.length?"ok":"err",out.length);
+  return out;
+}
+
+// 8. TikTok via Apify
+async function scrapeTikTok(){
+  if(!K.apify){ss("tiktok","idle",0);return[];}
+  ss("tiktok","loading");
+  try{
+    const r=await fetch(
+      `https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/run-sync-get-dataset-items?token=${K.apify}&timeout=50&memory=512`,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({hashtags:["indonesia","viral","fyp"],resultsPerPage:15,scrapeType:"hashtag",shouldDownloadVideos:false,shouldDownloadCovers:false}),
+       signal:AbortSignal.timeout(55000),}
+    );
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const vids=Array.isArray(j)?j:(j.items||[]);
+    const out=vids.slice(0,15).filter(v=>v.text||v.desc).map((v,i)=>({
+      id:"tt-"+(v.id||i),src:"tiktok",lbl:"@"+(v.authorMeta?.name||v.author?.uniqueId||"tiktok"),
+      title:(v.text||v.desc||"").slice(0,150),
+      meta:`❤ ${fmt(v.diggCount||v.stats?.diggCount)} · 💬 ${fmt(v.commentCount||v.stats?.commentCount)} · 🔁 ${fmt(v.shareCount||v.stats?.shareCount)}`,
+      score:v.diggCount||v.stats?.diggCount||0,val:null,
+    }));
+    ss("tiktok",out.length?"ok":"err",out.length);
+    return out;
+  }catch(e){console.warn("TikTok:",e.message);ss("tiktok","err",0);return[];}
+}
+
+// 9. Instagram via Apify
+async function scrapeInstagram(){
+  if(!K.apify){ss("instagram","idle",0);return[];}
+  ss("instagram","loading");
+  try{
+    const r=await fetch(
+      `https://api.apify.com/v2/acts/apify~instagram-hashtag-scraper/run-sync-get-dataset-items?token=${K.apify}&timeout=50&memory=512`,
+      {method:"POST",headers:{"Content-Type":"application/json"},
+       body:JSON.stringify({hashtags:["indonesia","viral"],resultsLimit:12}),
+       signal:AbortSignal.timeout(55000),}
+    );
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const posts=Array.isArray(j)?j:(j.items||[]);
+    const out=posts.slice(0,12).filter(p=>p.caption).map((p,i)=>({
+      id:"ig-"+(p.id||p.shortCode||i),src:"instagram",lbl:"@"+(p.ownerUsername||"ig"),
+      title:p.caption.slice(0,150),
+      meta:`❤ ${fmt(p.likesCount)} · 💬 ${fmt(p.commentsCount)}`,
+      score:p.likesCount||0,val:null,
+    }));
+    ss("instagram",out.length?"ok":"err",out.length);
+    return out;
+  }catch(e){console.warn("Instagram:",e.message);ss("instagram","err",0);return[];}
+}
+
+// 10. Web Trends (Perplexity general)
+async function scrapeWebTrends(){
+  if(!K.or){ss("webtrends","idle",0);return[];}
+  ss("webtrends","loading");
+  try{
+    const arr=await askPerplexity(`Cari 12 topik paling viral & trending di Indonesia hari ini. Mix beragam: ekonomi, crypto, AI, hiburan, olahraga, politik, lifestyle, sosmed. Pilih yang punya engagement tinggi.
+JSON array ONLY: [{"title":"...","meta":"1 kalimat konteks","score":1-100}]`);
+    const out=arr.filter(t=>t.title).map((t,i)=>({id:"wt-"+i,src:"webtrends",lbl:"perplexity",title:t.title,meta:t.meta||"",score:t.score||50,val:null}));
+    ss("webtrends",out.length?"ok":"err",out.length);
+    return out;
+  }catch(e){console.warn("webtrends:",e.message);ss("webtrends","err",0);return[];}
+}
+
+// ─── Scrape All ───────────────────────────────────────────────────────────────
+async function scrapeAll(){
+  if(scraping)return;
+  scraping=true; sel.clear(); filterOn=false; activeTab="all";
+  document.querySelectorAll(".stab").forEach(b=>b.classList.toggle("on",b.dataset.tab==="all"));
+  document.getElementById("filt-btn").textContent="Terpilih Saja";
+
+  const btn=document.getElementById("scrape-btn");
+  btn.disabled=true; btn.innerHTML=`<span class="spin">◌</span> Scraping...`;
+  document.getElementById("cl-body").innerHTML=`<div class="cl-empty"><span class="spin">◌</span> &nbsp;mengambil dari semua sumber secara paralel...</div>`;
+
+  // Run free sources fast, Perplexity sources together, Apify in parallel
+  const [rd,cr,ek,sh,te,pr,vi,tt,ig,wt]=await Promise.all([
+    scrapeReddit(),scrapeCrypto(),scrapeEkonomi(),scrapeSaham(),
+    scrapeTech(),scrapeProperty(),scrapeViral(),
+    scrapeTikTok(),scrapeInstagram(),scrapeWebTrends(),
+  ]);
+
+  items=[...wt,...vi,...cr,...ek,...rd,...te,...sh,...pr,...tt,...ig]
+    .sort((a,b)=>b.score-a.score);
+
+  renderList();
+  scraping=false;
+  btn.disabled=false;
+  btn.innerHTML="⚡ Scrape Ulang";
+  document.getElementById("cl-count-lbl").textContent=`BAHAN KONTEN (${items.length})`;
+}
+
+// ─── Checklist render ─────────────────────────────────────────────────────────
+const SRCCLS={reddit:"s-reddit",crypto:"s-crypto",ekonomi:"s-ekonomi",saham:"s-saham",tech:"s-tech",property:"s-property",viral:"s-viral",tiktok:"s-tiktok",instagram:"s-instagram",webtrends:"s-webtrends"};
+const SRCLBL={reddit:"Reddit",crypto:"Crypto",ekonomi:"Ekonomi",saham:"Saham",tech:"Tech",property:"Property",viral:"Viral",tiktok:"TikTok",instagram:"Instagram",webtrends:"Web"};
+
+function setTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll(".stab").forEach(b=>b.classList.remove("on"));
+  el.classList.add("on");
+  renderList();
+}
+function toggleFilter(){filterOn=!filterOn;document.getElementById("filt-btn").textContent=filterOn?"Semua":"Terpilih Saja";renderList();}
+function selectAll(){items.forEach(x=>sel.add(x.id));renderList();}
+function clearSel(){sel.clear();renderList();}
+
+function renderList(){
+  let list=items;
+  if(activeTab!=="all") list=list.filter(x=>x.src===activeTab);
+  if(filterOn) list=list.filter(x=>sel.has(x.id));
+  const cl=document.getElementById("cl-body");
+  if(!list.length){
+    cl.innerHTML=`<div class="cl-empty">${filterOn?"Belum ada yang dipilih":activeTab!=="all"?"Belum ada data untuk sumber ini":"Klik ⚡ Scrape untuk mulai"}</div>`;
+    updGenBtn();return;
+  }
+  cl.innerHTML=list.map(x=>{
+    const on=sel.has(x.id);
+    let valHtml="";
+    if(x.valType==="pct"&&x.val!=null){
+      const c=x.val>0?"val-up":x.val<0?"val-dn":"val-neu";
+      valHtml=`<span class="cl-val ${c}">${x.val>0?"+":""}${x.val.toFixed(1)}%</span>`;
+    }
+    return`<div class="cl-item${on?" on":""}" data-id="${e(x.id)}" onclick="toggle('${e(x.id)}')">
+      <div class="cl-cb"><span class="cl-chk">✓</span></div>
+      <div class="cl-body">
+        <div class="cl-r1">
+          <span class="cl-src ${SRCCLS[x.src]||""}">${SRCLBL[x.src]||x.src}</span>
+          <span class="cl-sub">${e(x.lbl)}</span>
+          ${valHtml}
+          ${!valHtml&&x.score>0?`<span class="cl-val val-neu" style="font-size:7px">${fmt(x.score)}</span>`:""}
+        </div>
+        <div class="cl-txt">${e(x.title)}</div>
+        ${x.meta?`<div class="cl-meta">${e(x.meta.slice(0,110))}</div>`:""}
+      </div>
+    </div>`;
+  }).join("");
+  updSelInfo(); updGenBtn();
+}
+
+function toggle(id){
+  sel.has(id)?sel.delete(id):sel.add(id);
+  const el=document.querySelector(`.cl-item[data-id="${id}"]`);
+  if(el) el.classList.toggle("on",sel.has(id));
+  updSelInfo(); updGenBtn();
+}
+function updSelInfo(){document.getElementById("sel-info").textContent=sel.size>0?`${sel.size} dipilih`:"";}
+function updGenBtn(){
+  const btn=document.getElementById("gen-btn"),hint=document.getElementById("hint");
+  btn.disabled=!sel.size||generating;
+  hint.style.display=sel.size?"none":"";
+  btn.textContent=sel.size?`⚡ Generate dari ${sel.size} Bahan Terpilih`:"⚡ Generate dari Bahan Terpilih";
+}
+
+// ─── Length chips ─────────────────────────────────────────────────────────────
+document.getElementById("len-chips").addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-len]");if(!b)return;
+  activeLen=b.dataset.len;
+  document.querySelectorAll("[data-len]").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");
+});
+
+// ─── Generate ─────────────────────────────────────────────────────────────────
+async function generate(){
+  if(generating||!sel.size)return;
+  if(!K.or){showErr("OpenRouter API key belum diset — klik ⚙ keys");return;}
+  generating=true; updGenBtn();
+  const btn=document.getElementById("gen-btn");
+  btn.innerHTML=`<span class="spin">◌</span> nulis postingan...`;
+  hideErr();
+  try{
+    const chosen=items.filter(x=>sel.has(x.id)).slice(0,8);
+    const ctx=chosen.map((x,i)=>`${i+1}. [${SRCLBL[x.src]||x.src}] ${x.title}${x.meta?" — "+x.meta.slice(0,80):""}`)
+      .join("\n");
+    const userMsg=`Bahan konten terpilih:\n\n${ctx}\n\n${LEN[activeLen]||LEN.auto}\n\nPilih bahan paling potensial, bungkus jadi 1 postingan Twitter/X gaya @setyamickala.`;
+    const{text,model}=await orPost([{role:"system",content:STYLE},{role:"user",content:userMsg}]);
+    addCard(text,model,chosen[0]?.title||"");
+  }catch(err){showErr(err.message);}
+  finally{generating=false;updGenBtn();}
+}
+
+async function orPost(msgs){
+  let last=null;
+  for(const model of MODELS){
+    try{
+      const r=await fetch(OR_URL,{method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+K.or,"HTTP-Referer":location.href,"X-Title":"PostGen ID"},
+        body:JSON.stringify({model,max_tokens:600,messages:msgs}),signal:AbortSignal.timeout(30000)});
+      const d=await r.json();
+      if(d.error){last=new Error(model.split("/")[1]+": "+d.error.message);continue;}
+      const text=d.choices?.[0]?.message?.content?.trim();
+      if(!text){last=new Error(model+": empty");continue;}
+      return{text,model};
+    }catch(err){if(err.name==="AbortError"){last=new Error(model+": timeout");continue;}last=err;}
+  }
+  throw last||new Error("Semua model gagal");
+}
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
+function addCard(text,model,srcTitle){
+  const ts=new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});
+  const mn=model.split("/")[1]||model;
+  const ll=document.querySelector("[data-len].on")?.textContent||activeLen;
+  const id="c"+Date.now();
+  const card=document.createElement("div");
+  card.className="card";card.id=id;
+  card.innerHTML=`
+    <div class="card-top">
+      <div class="ctags">
+        <span class="ctag ct-a">${e(ll)}</span>
+        <span class="ctag ct-g">${e(mn)}</span>
+        <span class="ctag ct-d">${e(srcTitle.length>38?srcTitle.slice(0,38)+"…":srcTitle)}</span>
+      </div>
+      <span class="card-ts">${ts}</span>
+    </div>
+    <pre class="card-txt">${e(text)}</pre>
+    <div class="card-bot">
+      <span class="card-ch">${text.length} chars</span>
+      <div class="card-btns">
+        <button class="cbtn" onclick="cp('${id}',this)">copy</button>
+        <button class="cbtn del" onclick="document.getElementById('${id}').remove()">hapus</button>
+      </div>
+    </div>`;
+  document.getElementById("feed").insertBefore(card,document.getElementById("feed").firstChild);
+}
+function cp(id,btn){
+  const t=document.querySelector(`#${id} .card-txt`)?.textContent||"";
+  navigator.clipboard.writeText(t);
+  btn.textContent="✓ copied";btn.classList.add("copied");
+  setTimeout(()=>{btn.textContent="copy";btn.classList.remove("copied");},2200);
+}
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+function fmt(n){if(!n&&n!==0)return"0";n=Number(n);if(n>=1e9)return(n/1e9).toFixed(1)+"B";if(n>=1e6)return(n/1e6).toFixed(1)+"M";if(n>=1e3)return(n/1e3).toFixed(1)+"K";return String(Math.round(n));}
+function e(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function showErr(m){const el=document.getElementById("gen-err");el.textContent=m;el.style.display="block";}
+function hideErr(){document.getElementById("gen-err").style.display="none";}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+refreshKeyUI();
+if(!K.or) toggleSettings();
+</script>
+</body>
+</html>
